@@ -1,0 +1,132 @@
+import tkinter as tk
+from tkinter import messagebox
+import random
+
+class JuegoAdivinaQuien:
+    def __init__(self):
+        self.personajes = {
+            "Maria": {"color_cabello": "rubio", "gafas": False, "sombrero": False, "bigote": False},
+            "Juan": {"color_cabello": "castano", "gafas": True, "sombrero": False, "bigote": False},
+            "Laura": {"color_cabello": "negro", "gafas": False, "sombrero": True, "bigote": False},
+            "Pedro": {"color_cabello": "pelirrojo", "gafas": True, "sombrero": True, "bigote": True},
+            "Ana": {"color_cabello": "rubio", "gafas": False, "sombrero": True, "bigote": False},
+            "Carlos": {"color_cabello": "castano", "gafas": True, "sombrero": False, "bigote": True},
+            "Elena": {"color_cabello": "negro", "gafas": True, "sombrero": True, "bigote": False},
+            "Pablo": {"color_cabello": "pelirrojo", "gafas": False, "sombrero": False, "bigote": True}
+        }
+        self.personaje_secreto = None
+        self.preguntas_realizadas = 0
+        self.conocimiento = {}
+        self.root = tk.Tk()
+        self.root.title("Adivina Quien")
+        self.menu_principal()
+
+    def menu_principal(self):
+        # Botón para iniciar el juego
+        btn_iniciar = tk.Button(self.root, text="Iniciar Juego", font=("Arial", 14), padx=20, pady=10, command=self.iniciar_juego)
+        btn_iniciar.pack(pady=20)
+
+        # Botón para agregar nueva pregunta y respuesta
+        btn_agregar_pregunta = tk.Button(self.root, text="Agregar Pregunta", font=("Arial", 14), padx=20, pady=10, command=self.mostrar_ventana_agregar_pregunta)
+        btn_agregar_pregunta.pack(pady=20)
+
+    def iniciar_juego(self):
+        self.preguntas_realizadas = 0
+        self.conocimiento = {}
+        self.personaje_secreto = random.choice(list(self.personajes.keys()))
+        self.mostrar_ventana_preguntas()
+
+    def mostrar_ventana_preguntas(self):
+        self.root.withdraw()  # Ocultar la ventana principal durante el juego
+        self.root_juego = tk.Toplevel(self.root)
+        self.root_juego.title("Adivina Quien")
+        atributos = list(self.personajes[self.personaje_secreto].keys())
+
+        def hacer_pregunta(atributo):
+            self.preguntas_realizadas += 1
+            if self.personajes[self.personaje_secreto][atributo]:
+                messagebox.showinfo("Resultado", f"El personaje tiene {atributo.capitalize()}!")
+                self.conocimiento[atributo] = True
+            else:
+                messagebox.showinfo("Resultado", f"El personaje no tiene {atributo.capitalize()}.")
+                self.conocimiento[atributo] = False
+            if self.preguntas_realizadas >= 3:
+                self.mostrar_caracteristicas_resto_personajes()
+
+        lbl_instrucciones = tk.Label(self.root_juego, text="Haz hasta 3 preguntas sobre el personaje secreto:", font=("Arial", 12))
+        lbl_instrucciones.pack(pady=20)
+
+        botones_preguntas = []
+        for atributo in atributos:
+            btn_pregunta = tk.Button(self.root_juego, text=f"Tiene {atributo.capitalize()}?", command=lambda a=atributo: hacer_pregunta(a))
+            btn_pregunta.pack(pady=5)
+            botones_preguntas.append(btn_pregunta)
+
+    def mostrar_caracteristicas_resto_personajes(self):
+        self.root_juego.destroy()  # Cerrar la ventana de preguntas
+        ventana_caracteristicas = tk.Toplevel(self.root)
+        ventana_caracteristicas.title("Personajes Restantes")
+        
+        for personaje, atributos in self.personajes.items():
+            if personaje != self.personaje_secreto:
+                lbl_caracteristicas = tk.Label(ventana_caracteristicas, text=f"{personaje}: {atributos}", font=("Arial", 12))
+                lbl_caracteristicas.pack(pady=5)
+                btn_seleccionar = tk.Button(ventana_caracteristicas, text=f"Elegir {personaje}", command=lambda p=personaje: self.verificar_seleccion(p))
+                btn_seleccionar.pack(pady=5)
+
+    def verificar_seleccion(self, personaje_elegido):
+        if personaje_elegido == self.personaje_secreto:
+            messagebox.showinfo("Felicidades!", f"Has adivinado correctamente! El personaje secreto es {self.personaje_secreto}.")
+        else:
+            messagebox.showinfo("Incorrecto", f"Lo siento, el personaje secreto no es {personaje_elegido}.")
+        self.mostrar_ventana_final()
+
+    def mostrar_ventana_final(self):
+        ventana_final = tk.Toplevel(self.root)
+        ventana_final.title("Fin del Juego")
+        
+        lbl_mensaje = tk.Label(ventana_final, text="Que deseas hacer?", font=("Arial", 14))
+        lbl_mensaje.pack(pady=20)
+        
+        btn_jugar_nuevamente = tk.Button(ventana_final, text="Jugar Nuevamente", font=("Arial", 12), padx=20, pady=10, command=self.iniciar_juego)
+        btn_jugar_nuevamente.pack(pady=10)
+        
+        btn_salir = tk.Button(ventana_final, text="Salir", font=("Arial", 12), padx=20, pady=10, command=self.salir_juego)
+        btn_salir.pack(pady=10)
+
+    def mostrar_ventana_agregar_pregunta(self):
+        # Ventana para agregar una nueva pregunta y respuesta
+        ventana_agregar = tk.Toplevel(self.root)
+        ventana_agregar.title("Agregar Pregunta")
+
+        lbl_pregunta = tk.Label(ventana_agregar, text="Nueva Pregunta:", font=("Arial", 12))
+        lbl_pregunta.pack(pady=10)
+        entry_pregunta = tk.Entry(ventana_agregar, font=("Arial", 12))
+        entry_pregunta.pack(pady=5)
+
+        lbl_respuesta = tk.Label(ventana_agregar, text="Respuesta (si/no):", font=("Arial", 12))
+        lbl_respuesta.pack(pady=10)
+        entry_respuesta = tk.Entry(ventana_agregar, font=("Arial", 12))
+        entry_respuesta.pack(pady=5)
+
+        def guardar_pregunta():
+            nueva_pregunta = entry_pregunta.get().strip().lower()
+            nueva_respuesta = entry_respuesta.get().strip().lower()
+
+            if nueva_pregunta and nueva_respuesta in ['si', 'no']:
+                for personaje in self.personajes:
+                    self.personajes[personaje][nueva_pregunta] = (nueva_respuesta == 'si')
+                messagebox.showinfo("Exito", "La nueva pregunta y respuesta han sido anadidas al sistema.")
+                ventana_agregar.destroy()
+            else:
+                messagebox.showerror("Error", "Por favor, introduce una pregunta y una respuesta validas (si/no).")
+
+        btn_guardar = tk.Button(ventana_agregar, text="Guardar", font=("Arial", 12), command=guardar_pregunta)
+        btn_guardar.pack(pady=20)
+
+    def salir_juego(self):
+        self.root.quit()
+
+# Crear una instancia del juego
+juego = JuegoAdivinaQuien()
+juego.root.mainloop()
