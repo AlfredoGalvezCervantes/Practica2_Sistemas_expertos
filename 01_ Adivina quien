@@ -1,132 +1,196 @@
 import tkinter as tk
 from tkinter import messagebox
-import random
+from PIL import Image, ImageTk
 
-class JuegoAdivinaQuien:
-    def __init__(self):
-        self.personajes = {
-            "Maria": {"color_cabello": "rubio", "gafas": False, "sombrero": False, "bigote": False},
-            "Juan": {"color_cabello": "castano", "gafas": True, "sombrero": False, "bigote": False},
-            "Laura": {"color_cabello": "negro", "gafas": False, "sombrero": True, "bigote": False},
-            "Pedro": {"color_cabello": "pelirrojo", "gafas": True, "sombrero": True, "bigote": True},
-            "Ana": {"color_cabello": "rubio", "gafas": False, "sombrero": True, "bigote": False},
-            "Carlos": {"color_cabello": "castano", "gafas": True, "sombrero": False, "bigote": True},
-            "Elena": {"color_cabello": "negro", "gafas": True, "sombrero": True, "bigote": False},
-            "Pablo": {"color_cabello": "pelirrojo", "gafas": False, "sombrero": False, "bigote": True}
-        }
-        self.personaje_secreto = None
-        self.preguntas_realizadas = 0
-        self.conocimiento = {}
-        self.root = tk.Tk()
-        self.root.title("Adivina Quien")
-        self.menu_principal()
+# Diccionario con nombres de las series y rutas a las imágenes
+series_imagenes = {
+    'Black Mirror': 'black_mirror.jpg',
+    'Squid Game': 'squid_game.jpg',
+    'Breaking Bad': 'breaking_bad.jpg',
+    'Game of Thrones': 'game_of_thrones.jpg',
+    'Stranger Things': 'stranger_things.jpg'
+}
 
-    def menu_principal(self):
-        # Botón para iniciar el juego
-        btn_iniciar = tk.Button(self.root, text="Iniciar Juego", font=("Arial", 14), padx=20, pady=10, command=self.iniciar_juego)
-        btn_iniciar.pack(pady=20)
+# Diccionario con las características de cada serie
+series_caracteristicas = {
+    'Black Mirror': {
+        'distópica': True,
+        'tecnología avanzada': True,
+        'episodios independientes': True
+    },
+    'Squid Game': {
+        'juegos mortales': True,
+        'competencia': True,
+        'temas oscuros': True
+    },
+    'Breaking Bad': {
+        'drogas': True,
+        'crimen': True,
+        'abogado': True
+    },
+    'Game of Thrones': {
+        'fantasía': True,
+        'intriga política': True,
+        'acción': True,
+        'personajes complejos': True
+    },
+    'Stranger Things': {
+        'ciencia ficción': True,
+        'sobrenatural': True,
+        'misterio': True,
+        'amistad': True
+    }
+}
 
-        # Botón para agregar nueva pregunta y respuesta
-        btn_agregar_pregunta = tk.Button(self.root, text="Agregar Pregunta", font=("Arial", 14), padx=20, pady=10, command=self.mostrar_ventana_agregar_pregunta)
-        btn_agregar_pregunta.pack(pady=20)
+def iniciar_juego():
+    # Ocultar la ventana principal
+    ventana_inicio.withdraw()
+    
+    # Crear ventana de preguntas
+    ventana_preguntas = tk.Toplevel()
+    ventana_preguntas.title("Preguntas")
+    
+    # Variables para el seguimiento de las preguntas y respuestas
+    pregunta_index = 0
+    respuestas_usuario = []
 
-    def iniciar_juego(self):
-        self.preguntas_realizadas = 0
-        self.conocimiento = {}
-        self.personaje_secreto = random.choice(list(self.personajes.keys()))
-        self.mostrar_ventana_preguntas()
-
-    def mostrar_ventana_preguntas(self):
-        self.root.withdraw()  # Ocultar la ventana principal durante el juego
-        self.root_juego = tk.Toplevel(self.root)
-        self.root_juego.title("Adivina Quien")
-        atributos = list(self.personajes[self.personaje_secreto].keys())
-
-        def hacer_pregunta(atributo):
-            self.preguntas_realizadas += 1
-            if self.personajes[self.personaje_secreto][atributo]:
-                messagebox.showinfo("Resultado", f"El personaje tiene {atributo.capitalize()}!")
-                self.conocimiento[atributo] = True
-            else:
-                messagebox.showinfo("Resultado", f"El personaje no tiene {atributo.capitalize()}.")
-                self.conocimiento[atributo] = False
-            if self.preguntas_realizadas >= 3:
-                self.mostrar_caracteristicas_resto_personajes()
-
-        lbl_instrucciones = tk.Label(self.root_juego, text="Haz hasta 3 preguntas sobre el personaje secreto:", font=("Arial", 12))
-        lbl_instrucciones.pack(pady=20)
-
-        botones_preguntas = []
-        for atributo in atributos:
-            btn_pregunta = tk.Button(self.root_juego, text=f"Tiene {atributo.capitalize()}?", command=lambda a=atributo: hacer_pregunta(a))
-            btn_pregunta.pack(pady=5)
-            botones_preguntas.append(btn_pregunta)
-
-    def mostrar_caracteristicas_resto_personajes(self):
-        self.root_juego.destroy()  # Cerrar la ventana de preguntas
-        ventana_caracteristicas = tk.Toplevel(self.root)
-        ventana_caracteristicas.title("Personajes Restantes")
-        
-        for personaje, atributos in self.personajes.items():
-            if personaje != self.personaje_secreto:
-                lbl_caracteristicas = tk.Label(ventana_caracteristicas, text=f"{personaje}: {atributos}", font=("Arial", 12))
-                lbl_caracteristicas.pack(pady=5)
-                btn_seleccionar = tk.Button(ventana_caracteristicas, text=f"Elegir {personaje}", command=lambda p=personaje: self.verificar_seleccion(p))
-                btn_seleccionar.pack(pady=5)
-
-    def verificar_seleccion(self, personaje_elegido):
-        if personaje_elegido == self.personaje_secreto:
-            messagebox.showinfo("Felicidades!", f"Has adivinado correctamente! El personaje secreto es {self.personaje_secreto}.")
+    # Función para actualizar la pregunta actual
+    def actualizar_pregunta():
+        nonlocal pregunta_index
+        if pregunta_index < len(preguntas):
+            pregunta_texto.set(preguntas[pregunta_index])
+            pregunta_index += 1
         else:
-            messagebox.showinfo("Incorrecto", f"Lo siento, el personaje secreto no es {personaje_elegido}.")
-        self.mostrar_ventana_final()
+            mostrar_resultado(respuestas_usuario, preguntas)
 
-    def mostrar_ventana_final(self):
-        ventana_final = tk.Toplevel(self.root)
-        ventana_final.title("Fin del Juego")
-        
-        lbl_mensaje = tk.Label(ventana_final, text="Que deseas hacer?", font=("Arial", 14))
-        lbl_mensaje.pack(pady=20)
-        
-        btn_jugar_nuevamente = tk.Button(ventana_final, text="Jugar Nuevamente", font=("Arial", 12), padx=20, pady=10, command=self.iniciar_juego)
-        btn_jugar_nuevamente.pack(pady=10)
-        
-        btn_salir = tk.Button(ventana_final, text="Salir", font=("Arial", 12), padx=20, pady=10, command=self.salir_juego)
-        btn_salir.pack(pady=10)
+    # Función para manejar la selección de respuestas
+    def obtener_respuesta(respuesta):
+        respuestas_usuario.append(respuesta)
+        # Imprimir la pregunta y la respuesta seleccionada en la consola
+        print(f"Pregunta: {preguntas[pregunta_index - 1]}")
+        print(f"Respuesta seleccionada: {'Sí' if respuesta else 'No'}")
+        actualizar_pregunta()
 
-    def mostrar_ventana_agregar_pregunta(self):
-        # Ventana para agregar una nueva pregunta y respuesta
-        ventana_agregar = tk.Toplevel(self.root)
-        ventana_agregar.title("Agregar Pregunta")
+    # Diccionario con las preguntas y sus respuestas
+    preguntas = [
+        "¿La serie presenta una sociedad distópica?",
+        "¿Hay tecnología avanzada en la trama?",
+        "¿Los episodios son independientes?",
+        "¿Hay presencia de crimen en la serie?",
+        "¿La serie contiene elementos de fantasía como dragones y magos?",
+        "¿La serie involucra intriga política?",
+        "¿La serie tiene escenas de peleas epicas?",
+        "¿Los personajes de la serie son complejos y desarrollados?",
+        "¿La trama incluye misterio ?",
+        "¿Contiene escenas de accion?",
+        "¿Hay juegos mortales en la serie?",
+        "¿La serie presenta una competencia entre los personajes?",
+        "¿La serie trata temas oscuros?",
+        "¿Hay presencia de drogas en la serie?",
+        "¿La serie tiene un abogado?",
+        "¿La serie presenta elementos de ciencia ficción con Monstruos ?",
+        "¿La amistad entre los personajes es un tema central?"
+    ]
+    
+    pregunta_texto = tk.StringVar()
+    pregunta_texto.set(preguntas[pregunta_index])
 
-        lbl_pregunta = tk.Label(ventana_agregar, text="Nueva Pregunta:", font=("Arial", 12))
-        lbl_pregunta.pack(pady=10)
-        entry_pregunta = tk.Entry(ventana_agregar, font=("Arial", 12))
-        entry_pregunta.pack(pady=5)
+    label_pregunta = tk.Label(ventana_preguntas, textvariable=pregunta_texto, padx=20, pady=20)
+    label_pregunta.pack()
+    
+    boton_si = tk.Button(ventana_preguntas, text="Sí", command=lambda: obtener_respuesta(True))
+    boton_si.pack(side="left", padx=10)
+    
+    boton_no = tk.Button(ventana_preguntas, text="No", command=lambda: obtener_respuesta(False))
+    boton_no.pack(side="right", padx=10)
 
-        lbl_respuesta = tk.Label(ventana_agregar, text="Respuesta (si/no):", font=("Arial", 12))
-        lbl_respuesta.pack(pady=10)
-        entry_respuesta = tk.Entry(ventana_agregar, font=("Arial", 12))
-        entry_respuesta.pack(pady=5)
+# Función para mostrar el resultado del juego
+def mostrar_resultado(respuestas_usuario, preguntas):
+    print("Respuestas del usuario:")
+    for pregunta, respuesta in zip(preguntas, respuestas_usuario):
+        print(f"{pregunta}: {'Sí' if respuesta else 'No'}")
+    print("\nComparación de respuestas:")
 
-        def guardar_pregunta():
-            nueva_pregunta = entry_pregunta.get().strip().lower()
-            nueva_respuesta = entry_respuesta.get().strip().lower()
+    coincidencias = {serie: sum(respuesta == caracteristicas.get(caracteristica, False) 
+                                for caracteristica, respuesta in zip(preguntas, respuestas_usuario))
+                     for serie, caracteristicas in series_caracteristicas.items()}
 
-            if nueva_pregunta and nueva_respuesta in ['si', 'no']:
-                for personaje in self.personajes:
-                    self.personajes[personaje][nueva_pregunta] = (nueva_respuesta == 'si')
-                messagebox.showinfo("Exito", "La nueva pregunta y respuesta han sido anadidas al sistema.")
-                ventana_agregar.destroy()
-            else:
-                messagebox.showerror("Error", "Por favor, introduce una pregunta y una respuesta validas (si/no).")
+    # Sumar coincidencias solo a Game of Thrones si las respuestas son 'Sí'
+    coincidencias['Game of Thrones'] += sum(respuestas_usuario[4:8])
 
-        btn_guardar = tk.Button(ventana_agregar, text="Guardar", font=("Arial", 12), command=guardar_pregunta)
-        btn_guardar.pack(pady=20)
+    # Sumar coincidencias solo a Squid Game si las respuestas son 'Sí'
+    coincidencias['Squid Game'] += sum(respuestas_usuario[10:13])
 
-    def salir_juego(self):
-        self.root.quit()
+    # Sumar coincidencias solo a Black Mirror si las respuestas son 'Sí'
+    coincidencias['Black Mirror'] += sum(respuestas_usuario[:3])
 
-# Crear una instancia del juego
-juego = JuegoAdivinaQuien()
-juego.root.mainloop()
+    # Sumar coincidencias solo a Breaking Bad si las respuestas son 'Sí'
+    coincidencias['Breaking Bad'] += sum(respuestas_usuario[13:16])
+
+    # Sumar coincidencias solo a Stranger Things si las respuestas son 'Sí'
+    coincidencias['Stranger Things'] += sum(respuestas_usuario[16:])
+
+    for serie, caracteristicas in series_caracteristicas.items():
+        coincidencias_serie = sum(respuesta == caracteristicas.get(caracteristica, False) 
+                                  for caracteristica, respuesta in zip(preguntas, respuestas_usuario))
+        print(f"{serie}: {coincidencias_serie}/{len(preguntas)} coincidencias")
+
+    max_coincidencias = max(coincidencias.values())
+    series_coincidentes = [serie for serie, coincidencia in coincidencias.items() if coincidencia == max_coincidencias]
+    
+    if len(series_coincidentes) == 1:
+        serie_adivinada = series_coincidentes[0]
+        mostrar_ventana_serie(serie_adivinada)
+    else:
+        ventana_resultado = tk.Toplevel()
+        ventana_resultado.title("Resultado")
+        tk.Label(ventana_resultado, text="Hay múltiples series con las mismas coincidencias", padx=20, pady=10).pack()
+        for serie in series_coincidentes:
+            tk.Label(ventana_resultado, text=f"Posible serie: {serie}", padx=20, pady=5).pack()
+
+# Función para mostrar la ventana con la serie adivinada
+def mostrar_ventana_serie(serie_adivinada):
+    ventana_serie = tk.Toplevel()
+    ventana_serie.title("Resultado")
+    
+    if serie_adivinada in series_imagenes:
+        imagen_path = series_imagenes[serie_adivinada]
+        try:
+            imagen = Image.open(imagen_path)
+            imagen = imagen.resize((300, 200), Image.LANCZOS)  # Resize using LANCZOS
+            imagen = ImageTk.PhotoImage(imagen)
+
+            label_imagen = tk.Label(ventana_serie, image=imagen)
+            label_imagen.image = imagen
+            label_imagen.pack()
+        except:
+            tk.Label(ventana_serie, text="No se pudo cargar la imagen", padx=20, pady=10).pack()
+            
+        tk.Label(ventana_serie, text=f"¡Elegiste la serie: {serie_adivinada}!", padx=20, pady=10).pack()
+        tk.Button(ventana_serie, text="Cerrar", command=ventana_serie.destroy).pack()
+    else:
+        messagebox.showerror("Error", "No se pudo encontrar la imagen de la serie elegida.")
+
+# Crear la ventana principal
+ventana_inicio = tk.Tk()
+ventana_inicio.title("Adivina la Serie")
+
+# Crear una cuadrícula de etiquetas para mostrar las imágenes
+row_num = 0
+for serie, imagen_path in series_imagenes.items():
+    imagen = Image.open(imagen_path)
+    imagen = imagen.resize((200, 150), Image.LANCZOS)  # Cambio a LANCZOS
+    imagen = ImageTk.PhotoImage(imagen)
+    
+    label_imagen = tk.Label(ventana_inicio, image=imagen)
+    label_imagen.image = imagen
+    label_imagen.grid(row=row_num // 2, column=row_num % 2, padx=10, pady=10)
+    
+    row_num += 1
+
+# Botón para iniciar el juego
+boton_jugar = tk.Button(ventana_inicio, text="Iniciar Juego", command=iniciar_juego)
+boton_jugar.grid(row=row_num // 2, column=0, columnspan=2, pady=10)
+
+# Ejecutar el bucle de eventos
+ventana_inicio.mainloop()
